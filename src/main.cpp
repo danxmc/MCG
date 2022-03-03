@@ -12,6 +12,8 @@ int a;
 std::vector<std::vector<int>> G;
 // Minimum edges cut weight sum
 int minEdgeCut = INT32_MAX;
+// N recursion calls
+int recursionCalls = 0;
 
 void ParseGraphFile(std::string fileName)
 {
@@ -74,6 +76,7 @@ int GetCutTotalWeights(std::vector<bool> &visitedVertices)
 
 void DFS(int vertexId, int cut, std::vector<bool> &visitedVertices, std::vector<bool> &edgeCuts)
 {
+    recursionCalls++;
     // Number of cuts reached
     if (cut == a)
     {
@@ -111,25 +114,54 @@ void DFS(int vertexId, int cut, std::vector<bool> &visitedVertices, std::vector<
     }
 }
 
+void PrintEdgeCutVertices(std::vector<bool> &edgeCuts)
+{
+    std::cout << "X = { ";
+    for (int i = 0; i < n; i++)
+    {
+        if (edgeCuts[i])
+        {
+            std::cout << i << " ";
+        }
+    }
+    std::cout << "}" << std::endl;
+}
+
+void PrintNonEdgeCutVertices(std::vector<bool> &edgeCuts)
+{
+    std::cout << "Y = { ";
+    for (int i = 0; i < n; i++)
+    {
+        if (!edgeCuts[i])
+        {
+            std::cout << i << " ";
+        }
+    }
+    std::cout << "}" << std::endl;
+}
+
+void PrintInputs()
+{
+    std::cout << "n = " << n << std::endl;
+    std::cout << "a = " << a << std::endl;
+    std::cout << "G = {" << std::endl;
+    for (int i = 0; i < G.size(); i++)
+    {
+        std::cout << "\t{ ";
+        for (int j = 0; j < G[i].size(); j++)
+        {
+            std::cout << G[i][j] << " ";
+        }
+        std::cout << "}" << std::endl;
+    }
+    std::cout << "}" << std::endl;
+}
+
 int main(int argc, char const *argv[])
 {
-    std::string fileName = "./data/graf_10_5.txt";
+    std::string fileName = "./data/graf_15_14.txt";
     a = atoi(argv[argc - 1]);
     ParseGraphFile(fileName);
-
-    // std::cout << "n = " << n << std::endl;
-    // std::cout << "a = " << a << std::endl;
-    // std::cout << "G = {" << std::endl;
-    // for (int i = 0; i < G.size(); i++)
-    // {
-    //     std::cout << "\t{ ";
-    //     for (int j = 0; j < G[i].size(); j++)
-    //     {
-    //         std::cout << G[i][j] << " ";
-    //     }
-    //     std::cout << "}" << std::endl;
-    // }
-    // std::cout << "}" << std::endl;
 
     // Create array of visited vertices and cuts
     std::vector<bool> isVertexVisited(n, false);
@@ -137,8 +169,11 @@ int main(int argc, char const *argv[])
 
     DFS(0, 0, isVertexVisited, isEdgeCut);
 
+    PrintEdgeCutVertices(isEdgeCut);
+
     std::cout << "MinEdgeCut = " << minEdgeCut << std::endl;
 
-    // std::cout << "Hello World! " << argc << " " << argv[argc - 1] << std::endl;
+    std::cout << "Recursion calls = " << recursionCalls << std::endl;
+
     return 0;
 }
