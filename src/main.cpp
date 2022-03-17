@@ -85,15 +85,18 @@ void DFS(int vertexId, int cut, std::vector<bool> &visitedVertices, std::vector<
     {
         int cutWeight = GetCutTotalWeights(visitedVertices);
 
-        // Override current minCutWeight sum if better
-        if (cutWeight < minEdgeCut)
+        #pragma omp critical 
         {
-            minEdgeCut = cutWeight;
-
-            // Mark an edgeCut if we have already visited the vertex
-            for (int i = 0; i < n; i++)
+            // Override current minCutWeight sum if better
+            if (cutWeight < minEdgeCut)
             {
-                edgeCuts[i] = visitedVertices[i];
+                minEdgeCut = cutWeight;
+
+                // Mark an edgeCut if we have already visited the vertex
+                for (int i = 0; i < n; i++)
+                {
+                    edgeCuts[i] = visitedVertices[i];
+                }
             }
         }
     }
@@ -114,20 +117,6 @@ void DFS(int vertexId, int cut, std::vector<bool> &visitedVertices, std::vector<
                 {
                     DFS(i, cut + 1, visitedVertices, edgeCuts);
                 }
-
-                // if (parallelCuts)
-                // {
-                //     #pragma omp task
-                //     {
-                //         DFS(i, cut + 1, visitedVertices, edgeCuts);
-                //     }
-
-                // }
-                // else
-                // {
-                    
-                //     DFS(i, cut + 1, visitedVertices, edgeCuts);
-                // }
 
                 #pragma omp taskwait
                 visitedVertices[i] = false;
