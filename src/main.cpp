@@ -3,6 +3,8 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
+#include <chrono>
+#include <omp.h>
 
 // Integer number representing the number of vertices of graph G, 100 >= n >= 10.
 int n;
@@ -77,12 +79,13 @@ int GetCutTotalWeights(std::vector<bool> &visitedVertices)
 void DFS(int vertexId, int cut, std::vector<bool> &visitedVertices, std::vector<bool> &edgeCuts)
 {
     recursionCalls++;
+
     // Number of cuts reached
     if (cut == a)
     {
         int cutWeight = GetCutTotalWeights(visitedVertices);
 
-        // Override current minCutWeight sum if better
+        // Override current minCutWeight sum if better5
         if (cutWeight < minEdgeCut)
         {
             minEdgeCut = cutWeight;
@@ -105,9 +108,13 @@ void DFS(int vertexId, int cut, std::vector<bool> &visitedVertices, std::vector<
             // Check if there's a connection between a vertex and it hasn't been visited
             if ((!visitedVertices[i]) && G[vertexId][i] != 0)
             {
-                // Add a cut recursively
-                DFS(i, cut + 1, visitedVertices, edgeCuts);
+                #pragma omp task
+                {
+                    // Add a cut recursively
+                    DFS(i, cut + 1, visitedVertices, edgeCuts);
+                }
 
+                #pragma omp taskawait
                 visitedVertices[i] = false;
             }
         }
@@ -167,13 +174,27 @@ int main(int argc, char const *argv[])
     std::vector<bool> isVertexVisited(n, false);
     std::vector<bool> isEdgeCut(n, false);
 
-    DFS(0, 0, isVertexVisited, isEdgeCut);
+    // Begin Timer
+    std::chrono::high_resolution_clock::time_point timerStart = std::chrono::high_resolution_clock::now();
 
+    #pragma omp parallel
+    {
+        #pragma omp single
+        DFS(0, 0, isVertexVisited, isEdgeCut);
+    }
+
+    // End Timer
+    std::chrono::high_resolution_clock::time_point timerEnd = std::chrono::high_resolution_clock::now();
+
+    std::chrono::milliseconds duration = std::chrono::duration_cast<std::chrono::milliseconds>(timerEnd - timerStart);
+
+    
     PrintEdgeCutVertices(isEdgeCut);
 
     std::cout << "MinEdgeCut = " << minEdgeCut << std::endl;
+    std::cout << "Time = " << duration.count() << " ms"<< std::endl;
 
-    std::cout << "Recursion calls = " << recursionCalls << std::endl;
+    // std::cout << "Recursion calls = " << recursionCalls << std::endl;
 
     return 0;
 }
