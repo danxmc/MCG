@@ -85,7 +85,7 @@ void DFS(int vertexId, int cut, std::vector<bool> &visitedVertices, std::vector<
     {
         int cutWeight = GetCutTotalWeights(visitedVertices);
 
-        // Override current minCutWeight sum if better5
+        // Override current minCutWeight sum if better
         if (cutWeight < minEdgeCut)
         {
             minEdgeCut = cutWeight;
@@ -108,13 +108,28 @@ void DFS(int vertexId, int cut, std::vector<bool> &visitedVertices, std::vector<
             // Check if there's a connection between a vertex and it hasn't been visited
             if ((!visitedVertices[i]) && G[vertexId][i] != 0)
             {
-                #pragma omp task
+                int parallelCuts = cut == 1;
+                
+                #pragma omp task if(parallelCuts)
                 {
-                    // Add a cut recursively
                     DFS(i, cut + 1, visitedVertices, edgeCuts);
                 }
 
-                #pragma omp taskawait
+                // if (parallelCuts)
+                // {
+                //     #pragma omp task
+                //     {
+                //         DFS(i, cut + 1, visitedVertices, edgeCuts);
+                //     }
+
+                // }
+                // else
+                // {
+                    
+                //     DFS(i, cut + 1, visitedVertices, edgeCuts);
+                // }
+
+                #pragma omp taskwait
                 visitedVertices[i] = false;
             }
         }
@@ -183,13 +198,14 @@ int main(int argc, char const *argv[])
         DFS(0, 0, isVertexVisited, isEdgeCut);
     }
 
+
     // End Timer
     std::chrono::high_resolution_clock::time_point timerEnd = std::chrono::high_resolution_clock::now();
 
     std::chrono::milliseconds duration = std::chrono::duration_cast<std::chrono::milliseconds>(timerEnd - timerStart);
 
     
-    PrintEdgeCutVertices(isEdgeCut);
+    // PrintEdgeCutVertices(isEdgeCut);
 
     std::cout << "MinEdgeCut = " << minEdgeCut << std::endl;
     std::cout << "Time = " << duration.count() << " ms"<< std::endl;
